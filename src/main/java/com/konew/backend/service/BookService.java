@@ -172,4 +172,12 @@ public class BookService
         return imageUrl;
     }
 
+    public List<BookResponse> getUserBooks(Long id)
+    {
+        List<Book> userBooks = bookRepository.getUserBooks(id);
+        if(userBooks.size() == 0) return null;
+        else{
+            return mapToBookResponse(userBooks);
+        }
+    }
 }

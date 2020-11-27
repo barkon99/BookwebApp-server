@@ -12,14 +12,8 @@ import java.util.Optional;
 @Repository
 public interface RatingRepository extends JpaRepository<Rating, Long> {
 
-    @Query(value = "SELECT rate from rating where book_id=:book_id", nativeQuery = true)
-    List<Integer>getRatings(@Param("book_id") long book_id);
-
     @Query(value = "select * from rating where appuser_id=:appuser_id and book_id=:book_id", nativeQuery = true)
     Optional<Rating> getUserRates(@Param("appuser_id") long appuser_id, @Param("book_id") long book_id);
-
-    @Query(value = "select * from rating where appuser_id=:appuser_id", nativeQuery = true)
-    List<Rating> getUserRates(@Param("appuser_id") long appuser_id);
 
     @Query(value = "select count(id) from rating where book_id=:book_id", nativeQuery = true)
     Integer getAmountOFRatings(@Param("book_id") long book_id);
