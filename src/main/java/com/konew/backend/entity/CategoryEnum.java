@@ -10,5 +10,5 @@ public enum CategoryEnum
     ROMANCE,
     SCIENCE,
     THRILLER,
-    OTHER
+    OTHERS
 }
