@@ -1,5 +1,8 @@
 # Bookweb App server
 
+## Showcase of the application
+https://www.youtube.com/watch?v=NjLqN5ZVV8E&ab_channel=BartekKonewka
+
 ## Functionalities of Bookweb App
  - login  
  - registration 
