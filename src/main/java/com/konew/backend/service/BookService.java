@@ -5,15 +5,12 @@ import com.konew.backend.exception.ResourceNotFoundException;
 import com.konew.backend.model.BookModel;
 import com.konew.backend.model.response.BookResponse;
 import com.konew.backend.repository.BookRepository;
+import com.konew.backend.repository.RatingRepository;
 import com.konew.backend.repository.UserRepository;
 import com.konew.backend.security.AuthExceptionHandler;
-import com.konew.backend.security.userDetails.UserDetailsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,58 +29,68 @@ public class BookService
     UserRepository userRepository;
     RateService rateService;
     ImageUploader imageUploader;
+    BookAuthenticationService bookAuthenticationService;
+    RatingRepository ratingRepository;
 
-    @Autowired
-    public BookService(BookRepository bookRepository, UserRepository userRepository, RateService rateService, ImageUploader imageUploader) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository, RateService rateService, ImageUploader imageUploader, RatingRepository ratingRepository) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.rateService = rateService;
         this.imageUploader = imageUploader;
+        this.ratingRepository = ratingRepository;
     }
 
     public List<BookResponse> getBooks()
     {
-
-        return mapToBookResponse(bookRepository.findAll());
+        return getBookResponse(bookRepository.findAll());
     }
     public List<BookResponse> getAcceptedBooks(){
-        return mapToBookResponse(bookRepository.getAcceptedBooks());
+        return getBookResponse(bookRepository.getAcceptedBooks());
     }
 
-    public List<BookResponse> mapToBookResponse(List<Book> books){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getPrincipal() instanceof UserDetailsImpl) {
-            UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-            Long currentUserId = principal.getId();
 
-            List<BookResponse> bookResponses = books.stream()
-                    .map(book -> new BookResponse(
-                            book.getId(),
-                            book.getTitle(),
-                            book.getAuthor(),
-                            book.getCategory().name(),
-                            rateService.getAverageRate(book),
-                            book.getRatings()
-                                    .stream()
-                                    .filter(rate -> rate.getUser().getId() == currentUserId)
-                                    .map(value -> value.getValue())
-                                    .findFirst()
-                                    .orElse(-1),
-                            book.getUser().getUsername(),
-                            rateService.ratingRepository.getAmountOFRatings(book.getId()),
-                            book.getImageUrl()
-                    ))
-                    .collect(Collectors.toList());
-            return bookResponses.stream().map(bookResponse -> ResponseEntity.ok(bookResponse).getBody()).collect(Collectors.toList());
+    public List<BookResponse> getBookResponse(List<Book> books){
+        bookAuthenticationService = new BookAuthenticationService();
+        Authentication authentication = bookAuthenticationService.getAuthentication();
+        if(bookAuthenticationService.isInstanceUserDetailsImpl(authentication)) {
+            Long currentUserId = bookAuthenticationService.getUserId(authentication);
+
+            List<BookResponse> bookResponses = mapBookToBookResponse(books, currentUserId);
+            return bookResponses;
         }
         return null;
+    }
+
+    private List<BookResponse> mapBookToBookResponse(List<Book> books, Long currentUserId) {
+        return books.stream()
+                        .map(book -> BookResponse.builder()
+                                .id(book.getId())
+                                .title(book.getTitle())
+                                .author(book.getAuthor())
+                                .category(book.getCategory().name())
+                                .avg_rate(rateService.getAverageRate(book))
+                                .user_rate(getUserRate(book,currentUserId))
+                                .userName(book.getUser().getUsername())
+                                .amountOfRatings(ratingRepository.getAmountOFRatings(book.getId()))
+                                .imageUrl(book.getImageUrl())
+                                .build()
+                        )
+                        .collect(Collectors.toList());
+    }
+    private int getUserRate(Book book, Long currentUserId){
+        return book.getRatings()
+                .stream()
+                .filter(rate -> rate.getUser().getId() == currentUserId)
+                .map(value -> value.getValue())
+                .findFirst()
+                .orElse(-1);
     }
 
     public BookResponse getBookResponse(Long id)
     {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book with id " + id + "does not exist"));
-        return mapToBookResponse(Arrays.asList(book)).stream().findFirst()
+        return getBookResponse(Arrays.asList(book)).stream().findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Book with id " + id + "does not exist"));
     }
 
@@ -149,7 +156,7 @@ public class BookService
     }
 
     public List<BookResponse> getBooksToAccept(){
-        return mapToBookResponse(bookRepository.getBooksNotAccepted());
+        return getBookResponse(bookRepository.getBooksNotAccepted());
     }
 
     public boolean isAdmin(long id){
@@ -177,7 +184,7 @@ public class BookService
         List<Book> userBooks = bookRepository.getUserBooks(id);
         if(userBooks.size() == 0) return null;
         else{
-            return mapToBookResponse(userBooks);
+            return getBookResponse(userBooks);
         }
     }
 }

@@ -55,7 +55,11 @@ public class BookTest
         books.add(book2);
 
         List<BookResponse> bookResponses = books.stream()
-                .map(b -> new BookResponse(b.getId(), b.getTitle(), b.getAuthor()))
+                .map(b -> BookResponse.builder()
+                        .id(b.getId())
+                        .title(b.getTitle())
+                        .author(b.getAuthor())
+                        .build())
                 .collect(Collectors.toList());
         return bookResponses;
     }
