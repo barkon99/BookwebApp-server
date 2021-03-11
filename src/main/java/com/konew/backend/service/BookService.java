@@ -10,6 +10,7 @@ import com.konew.backend.repository.UserRepository;
 import com.konew.backend.security.AuthExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +41,11 @@ public class BookService
         this.ratingRepository = ratingRepository;
     }
 
+    @Autowired
+    public void setBookAuthenticationService(BookAuthenticationService bookAuthenticationService) {
+        this.bookAuthenticationService = bookAuthenticationService;
+    }
+
     public List<BookResponse> getBooks()
     {
         return getBookResponse(bookRepository.findAll());
@@ -50,7 +56,7 @@ public class BookService
 
 
     public List<BookResponse> getBookResponse(List<Book> books){
-        bookAuthenticationService = new BookAuthenticationService();
+//        bookAuthenticationService = new BookAuthenticationService();
         Authentication authentication = bookAuthenticationService.getAuthentication();
         if(bookAuthenticationService.isInstanceUserDetailsImpl(authentication)) {
             Long currentUserId = bookAuthenticationService.getUserId(authentication);
