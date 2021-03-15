@@ -1,8 +1,15 @@
 package com.konew.backend.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class BookRateModel
 {
     @Min(1)
@@ -10,31 +17,4 @@ public class BookRateModel
     private int rate;
     private long bookId;
     private long userId;
-
-    public BookRateModel() {
-    }
-
-    public int getRate() {
-        return rate;
-    }
-
-    public void setRate(int rate) {
-        this.rate = rate;
-    }
-
-    public long getBookId() {
-        return bookId;
-    }
-
-    public void setBookId(long bookId) {
-        this.bookId = bookId;
-    }
-
-    public void setUserID(long userId) {
-        this.userId = userId;
-    }
-
-    public long getUserId() {
-        return userId;
-    }
 }
