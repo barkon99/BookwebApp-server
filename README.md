@@ -21,7 +21,7 @@ https://www.youtube.com/watch?v=NjLqN5ZVV8E&ab_channel=BartekKonewka
  - updating book data 
  - deleting a book
  
- ## Tools which I used to build client side of this app 
+ ## Tools which I used to build server side of this app 
  - java
  - spring data jpa
  - hibernate
